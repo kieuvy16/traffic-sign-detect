@@ -57,6 +57,7 @@ except Exception as e:
     model = None
 
 # Initialize pygame mixer for audio playback
+os.environ["SDL_AUDIODRIVER"] = "directsound"
 pygame.mixer.init()
 
 # Vietnamese sign names mapping
@@ -118,7 +119,7 @@ def speak_vietnamese(text_to_speak):
         is_speaking = True
         try:
             # Create TTS audio
-            tts = gTTS(text=text, lang='vi')
+            tts = gTTS(text=text_to_speak, lang='vi')
             
             # Save to temp file
             with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as fp:
@@ -145,9 +146,7 @@ def speak_vietnamese(text_to_speak):
             is_speaking = False
     
     # Run in background thread
-    thread = threading.Thread(target=_speak)
-    thread.daemon = True
-    thread.start()
+    threading.Thread(target=_speak, daemon=True).start()
 
 def announce_detection(class_name):
     """Announce detection if not recently announced"""
@@ -163,10 +162,10 @@ def announce_detection(class_name):
     # Get Vietnamese name
     vietnamese_name = SIGN_NAMES_VIETNAMESE.get(class_name, class_name)
     text_to_speak = f"Phía trước có biển báo: {vietnamese_name}"
-    speak_vietnamese(text)
+    speak_vietnamese(text_to_speak)
     
-    # Speak it
-    speak_vietnamese(text)
+    # # Speak it
+    # speak_vietnamese(text_to_speak)
     
     # Update last announced time
     announced_signs[class_name] = now
