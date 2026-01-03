@@ -1,8 +1,8 @@
 path: ./traffic_sign_dataset
+
 train: images/train
 val: images/val
 
-names:
 names:
   0: Cam dung
   1: Cam do
@@ -20,7 +20,6 @@ names:
   13: Cam dung va do xe
   14: Cam coi
   15: Het han che toc do
-
   16: Nguy hiem khuc cua trai
   17: Nguy hiem khuc cua phai
   18: Duong cong lien tiep
@@ -36,7 +35,6 @@ names:
   28: Duong xau
   29: Co gio ngang
   30: Canh bao khac
-
   31: Hieu lenh re trai
   32: Hieu lenh re phai
   33: Di thang
@@ -47,7 +45,6 @@ names:
   38: Duong danh cho xe dap
   39: Duong danh cho xe may
   40: Duong danh cho oto
-
   41: Chi dan benh vien
   42: Chi dan ben xe
   43: Chi dan tram xang
@@ -58,7 +55,6 @@ names:
   48: Het duong uu tien
   49: Het moi lenh cam
   50: Het moi han che
-
   51: Cam dung tu 6h den 18h
   52: Cam do tu 6h den 18h
   53: Khu vuc truong hoc
