@@ -1,0 +1,71 @@
+path: ./traffic_sign_dataset
+train: images/train
+val: images/val
+
+names:
+names:
+  0: Cam dung
+  1: Cam do
+  2: Cam quay dau
+  3: Cam re trai
+  4: Cam re phai
+  5: Cam oto
+  6: Cam xe tai
+  7: Cam xe may
+  8: Cam xe dap
+  9: Cam di nguoc chieu
+  10: Cam vuot
+  11: Giam toc do
+  12: Duong cam
+  13: Cam dung va do xe
+  14: Cam coi
+  15: Het han che toc do
+
+  16: Nguy hiem khuc cua trai
+  17: Nguy hiem khuc cua phai
+  18: Duong cong lien tiep
+  19: Duong hep
+  20: Duong truot
+  21: Duong giao nhau
+  22: Giao nhau co tin hieu
+  23: Giao nhau co duong sat
+  24: Tre em qua duong
+  25: Nguoi di bo
+  26: Cong truong
+  27: Co dong vat cat ngang
+  28: Duong xau
+  29: Co gio ngang
+  30: Canh bao khac
+
+  31: Hieu lenh re trai
+  32: Hieu lenh re phai
+  33: Di thang
+  34: Di thang hoac re trai
+  35: Di thang hoac re phai
+  36: Di vong chuong ngai
+  37: Duong danh cho nguoi di bo
+  38: Duong danh cho xe dap
+  39: Duong danh cho xe may
+  40: Duong danh cho oto
+
+  41: Chi dan benh vien
+  42: Chi dan ben xe
+  43: Chi dan tram xang
+  44: Chi dan noi do xe
+  45: Chi dan duong mot chieu
+  46: Chi dan duong cam
+  47: Duong uu tien
+  48: Het duong uu tien
+  49: Het moi lenh cam
+  50: Het moi han che
+
+  51: Cam dung tu 6h den 18h
+  52: Cam do tu 6h den 18h
+  53: Khu vuc truong hoc
+  54: Khu dan cu
+  55: Het khu dan cu
+  56: Bang stop
+  57: Nhuong duong
+  58: Camera phat nguoi
+  59: Zone cam dung do
+  60: Het zone cam dung do
