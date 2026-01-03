@@ -35,7 +35,8 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 #     print("💡 Make sure you have internet connection for downloading pretrained model")
 #     model = None
 # MODEL_PATH = "src/models/yolo11/weights/best.pt"
-MODEL_PATH = "runs/detect/train/weights/best.pt"
+MODEL_PATH = "runs/detect/train15/weights/best.pt"
+
 
 
 try:
@@ -104,7 +105,7 @@ announced_signs = {}  # signName -> lastAnnouncedTime
 ANNOUNCE_COOLDOWN = 5  # 5 seconds cooldown
 is_speaking = False
 
-def speak_vietnamese(text):
+def speak_vietnamese(text_to_speak):
     """Speak Vietnamese text using gTTS"""
     global is_speaking
     
@@ -243,8 +244,8 @@ def process_image(image):
                         'confidence': float(box.conf[0]),
                         'bbox': box.xyxy[0].tolist()  # [x1, y1
                     }
-                    detections.append(dêtection)
-                    print(f" Biển báo {i+1}: {vn_name} ({dêtection['confidence']:.2f})")
+                    detections.append(detection)
+                    print(f" Biển báo {i+1}: {vn_name} ({detection['confidence']:.2f})")
                 except Exception as box_error:
                     print(f"⚠️ Error processing box {i}: {box_error}")
                     continue
@@ -330,4 +331,4 @@ if __name__ == '__main__':
     os.makedirs('static', exist_ok=True)
     
     print("🔊 TTS Engine: gTTS (Google Text-to-Speech)")
-    app.run(debug=True, host='0.0.0.0', port=8000)
+    app.run(debug=False, host='0.0.0.0', port=8000)
