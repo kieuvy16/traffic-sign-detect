@@ -45,7 +45,8 @@ try:
         print(f"✅ Loaded custom model from: {MODEL_PATH}")
     else:
         print("⚠️ Custom model not found. Downloading pretrained YOLO11 model...")
-        model = YOLO("yolo11n.pt")
+        # model = YOLO("yolo11n.pt")
+        model = YOLO("runs/detect/train15/weights/best.pt")
         print("✅ Loaded pretrained YOLO11n model")
 
     print(f"📋 Model classes: {list(model.names.values())}")
