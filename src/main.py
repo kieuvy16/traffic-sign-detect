@@ -241,9 +241,13 @@ def process_image(image):
                     vn_name = SIGN_NAMES_VIETNAMESE.get(class_name, class_name)
                     detection = {
                         'class_name': vn_name,
+                        
                         'confidence': float(box.conf[0]),
                         'bbox': box.xyxy[0].tolist()  # [x1, y1
+                        
                     }
+                    announce_detection(class_name)
+
                     detections.append(detection)
                     print(f" Biển báo {i+1}: {vn_name} ({detection['confidence']:.2f})")
                 except Exception as box_error:
@@ -317,7 +321,7 @@ def speak():
         class_name = data.get('class_name', '')
         confidence = data.get('confidence', 0)
         
-        if class_name and confidence > 0.6:
+        if class_name and confidence > 0.:
             announce_detection(class_name)
             return jsonify({'success': True})
         
