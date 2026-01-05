@@ -57,7 +57,9 @@ except Exception as e:
     model = None
 
 # Initialize pygame mixer for audio playback
-os.environ["SDL_AUDIODRIVER"] = "directsound"
+# os.environ["SDL_AUDIODRIVER"] = "directsound"
+# pygame.mixer.init()
+os.environ["SDL_AUDIODRIVER"] = "winmm"
 pygame.mixer.init()
 
 # Vietnamese sign names mapping
@@ -105,71 +107,199 @@ SIGN_NAMES_VIETNAMESE = {
 # Track announced signs with cooldown
 announced_signs = {}  # signName -> lastAnnouncedTime
 ANNOUNCE_COOLDOWN = 5  # 5 seconds cooldown
+# is_speaking = False
+
+# def speak_vietnamese(text_to_speak):
+#     """Speak Vietnamese text using gTTS"""
+#     global is_speaking
+    
+#     if is_speaking:
+#         return
+    
+#     def _speak():
+#         global is_speaking
+#         is_speaking = True
+#         try:
+#             # Create TTS audio
+#             tts = gTTS(text=text_to_speak, lang='vi')
+            
+#             # Save to temp file
+#             with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as fp:
+#                 temp_path = fp.name
+#                 tts.save(temp_path)
+            
+#             # Play audio
+#             pygame.mixer.music.load(temp_path)
+#             pygame.mixer.music.play()
+            
+#             # Wait for audio to finish
+#             while pygame.mixer.music.get_busy():
+#                 time.sleep(0.1)
+            
+#             # Clean up temp file
+#             try:
+#                 os.unlink(temp_path)
+#             except:
+#                 pass
+                
+#         except Exception as e:
+#             print(f"❌ TTS Error: {e}")
+#         finally:
+#             is_speaking = False
+    
+#     # Run in background thread
+#     threading.Thread(target=_speak, daemon=True).start()
+# def speak_vietnamese(text_to_speak):
+#     global is_speaking
+
+#     if is_speaking:
+#         print("⏳ Đang nói, bỏ qua...")
+#         return
+
+#     def _speak():
+#         global is_speaking
+#         is_speaking = True
+#         try:
+#             print("🎤 Đang tạo TTS:", text_to_speak)
+
+#             tts = gTTS(text=text_to_speak, lang='vi')
+
+#             temp_path = os.path.join(tempfile.gettempdir(), "tts_audio.mp3")
+#             tts.save(temp_path)
+
+#             pygame.mixer.music.load(temp_path)
+#             pygame.mixer.music.set_volume(1.0)
+#             pygame.mixer.music.play()
+
+#             while pygame.mixer.music.get_busy():
+#                 time.sleep(0.1)
+
+#             print("✔️ Đã đọc xong!")
+
+#         except Exception as e:
+#             print("❌ Lỗi TTS:", e)
+
+#         finally:
+#             is_speaking = False
+
+#     threading.Thread(target=_speak, daemon=True).start()
+
+
+# def announce_detection(class_name):
+#     """Announce detection if not recently announced"""
+#     global announced_signs
+    
+#     now = time.time()
+#     last_announced = announced_signs.get(class_name, 0)
+    
+#     # Check cooldown
+#     if now - last_announced < ANNOUNCE_COOLDOWN:
+#         return
+    
+#     # Get Vietnamese name
+#     vietnamese_name = SIGN_NAMES_VIETNAMESE.get(class_name, class_name)
+#     text_to_speak = f"Phía trước có biển báo: {vietnamese_name}"
+#     speak_vietnamese(text_to_speak)
+    
+#     # # Speak it
+#     # speak_vietnamese(text_to_speak)
+    
+#     # Update last announced time
+#     announced_signs[class_name] = now
+# def speak_vietnamese(text):
+#     try:
+#         print("🎤 Tạo file TTS...")
+
+#         # tạo file tạm nhưng KHÔNG giữ handle
+#         temp_file = os.path.join(tempfile.gettempdir(), f"tts_{int(time.time()*1000)}.mp3")
+
+#         tts = gTTS(text=text, lang="vi")
+#         tts.save(temp_file)
+
+#         print("🎧 Đang phát âm thanh…", temp_file)
+
+#         pygame.mixer.music.load(temp_file)
+#         pygame.mixer.music.play()
+
+#         while pygame.mixer.music.get_busy():
+#             time.sleep(0.1)
+
+#         pygame.mixer.music.unload()   # 🔥 giải phóng file
+#         os.remove(temp_file)          # 🔥 lúc này mới xóa an toàn
+
+#         print("✔️ Phát xong & dọn file")
+
+#     except Exception as e:
+#         print("❌ TTS Error:", e)
+
+#         is_speaking = False
+
+#     threading.Thread(target=_speak, daemon=True).start()
 is_speaking = False
 
-def speak_vietnamese(text_to_speak):
-    """Speak Vietnamese text using gTTS"""
+def speak_vietnamese(text):
     global is_speaking
-    
+
     if is_speaking:
+        print("⏳ Đang nói, bỏ qua...")
         return
-    
-    def _speak():
+
+    def worker():
         global is_speaking
-        is_speaking = True
-        try:
-            # Create TTS audio
-            tts = gTTS(text=text_to_speak, lang='vi')
+     
+        try:   
+            is_speaking = True
+            print("🎤 Tạo file TTS...")
+
+            temp_file = os.path.join(
+                tempfile.gettempdir(), 
+                f"tts_{int(time.time()*1000)}.mp3"
+            )
             
-            # Save to temp file
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as fp:
-                temp_path = fp.name
-                tts.save(temp_path)
-            
-            # Play audio
-            pygame.mixer.music.load(temp_path)
+            pygame.mixer.init()
+
+            tts = gTTS(text=text, lang="vi")
+            tts.save(temp_file)
+
+            print("🎧 Đang phát âm thanh:", temp_file)
+
+            pygame.mixer.music.load(temp_file)
             pygame.mixer.music.play()
-            
-            # Wait for audio to finish
+
             while pygame.mixer.music.get_busy():
                 time.sleep(0.1)
-            
-            # Clean up temp file
-            try:
-                os.unlink(temp_path)
-            except:
-                pass
-                
+
+            pygame.mixer.music.unload()
+            os.remove(temp_file)
+
+            print("✔️ Phát xong & dọn file")
+
         except Exception as e:
-            print(f"❌ TTS Error: {e}")
+            print("❌ TTS Error:", e)
+
         finally:
             is_speaking = False
-    
-    # Run in background thread
-    threading.Thread(target=_speak, daemon=True).start()
+
+    threading.Thread(target=worker, daemon=True).start()
+
 
 def announce_detection(class_name):
-    """Announce detection if not recently announced"""
     global announced_signs
-    
     now = time.time()
-    last_announced = announced_signs.get(class_name, 0)
-    
-    # Check cooldown
-    if now - last_announced < ANNOUNCE_COOLDOWN:
+    last = announced_signs.get(class_name, 0)
+
+    if now - last < ANNOUNCE_COOLDOWN:
+        print("⏸ Bỏ vì cooldown")
         return
-    
-    # Get Vietnamese name
-    vietnamese_name = SIGN_NAMES_VIETNAMESE.get(class_name, class_name)
-    text_to_speak = f"Phía trước có biển báo: {vietnamese_name}"
-    speak_vietnamese(text_to_speak)
-    
-    # # Speak it
-    # speak_vietnamese(text_to_speak)
-    
-    # Update last announced time
+
+    vn = SIGN_NAMES_VIETNAMESE.get(class_name, class_name)
+    text = f"Phía trước có biển báo: {vn}"
+    print("🔊 Sắp đọc:", text)
+
+    speak_vietnamese(text)
+
     announced_signs[class_name] = now
-    print(f"🔊 Đang đọc: {vietnamese_name}")
+
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
 
