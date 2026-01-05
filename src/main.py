@@ -60,7 +60,7 @@ except Exception as e:
 # os.environ["SDL_AUDIODRIVER"] = "directsound"
 # pygame.mixer.init()
 os.environ["SDL_AUDIODRIVER"] = "winmm"
-pygame.mixer.init()
+# pygame.mixer.init()
 
 # Vietnamese sign names mapping
 SIGN_NAMES_VIETNAMESE = {
@@ -235,6 +235,7 @@ ANNOUNCE_COOLDOWN = 5  # 5 seconds cooldown
 #         is_speaking = False
 
 #     threading.Thread(target=_speak, daemon=True).start()
+
 is_speaking = False
 
 def speak_vietnamese(text):
@@ -268,11 +269,14 @@ def speak_vietnamese(text):
 
             while pygame.mixer.music.get_busy():
                 time.sleep(0.1)
+                
+            pygame.mixer.music.stop()
+            pygame.mixer.quit()
 
             pygame.mixer.music.unload()
             os.remove(temp_file)
 
-            print("✔️ Phát xong & dọn file")
+            print("✔️ Đã đọc")
 
         except Exception as e:
             print("❌ TTS Error:", e)
