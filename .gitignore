@@ -1,1 +1,15 @@
 venv/ 
+# YOLO runs
+runs/
+
+# Dataset images
+src/datasets/train/images/
+src/datasets/train/labels.cache
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Weights
+*.pt
