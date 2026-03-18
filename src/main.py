@@ -35,7 +35,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 #     print("💡 Make sure you have internet connection for downloading pretrained model")
 #     model = None
 # MODEL_PATH = "src/models/yolo11/weights/best.pt"
-MODEL_PATH = "runs/detect/train15/weights/best.pt"
+MODEL_PATH = "runs/detect/train274/weights/best.pt"
 
 
 
@@ -46,7 +46,7 @@ try:
     else:
         print("⚠️ Custom model not found. Downloading pretrained YOLO11 model...")
         # model = YOLO("yolo11n.pt")
-        model = YOLO("runs/detect/train15/weights/best.pt")
+        model = YOLO("runs/detect/train274/weights/best.pt")
         print("✅ Loaded pretrained YOLO11n model")
 
     print(f"📋 Model classes: {list(model.names.values())}")
@@ -74,7 +74,7 @@ SIGN_NAMES_VIETNAMESE = {
     'Containers ban': 'Cấm xe container',
     'Dangerous Turn': 'Chỗ ngoặt nguy hiểm',
     'Left Turn': 'Rẽ trái',
-    'Motobike ban': 'Cấm xe máy',
+    # 'Motobike ban': 'Cấm xe máy',
     'Motobike ban1': 'Cấm xe máy',
     'Motorcycles Only': 'Chỉ dành cho xe máy',
     'No Passenger Cars and Trucks': 'Cấm ô tô và xe tải',
@@ -238,45 +238,79 @@ ANNOUNCE_COOLDOWN = 5  # 5 seconds cooldown
 
 is_speaking = False
 
+# def speak_vietnamese(text):
+#     global is_speaking
+
+#     if is_speaking:
+#         print("⏳ Đang nói, bỏ qua...")
+#         return
+
+#     def worker():
+#         global is_speaking
+     
+#         try:   
+#             is_speaking = True
+#             print("🎤 Tạo file TTS...")
+
+#             temp_file = os.path.join(
+#                 tempfile.gettempdir(), 
+#                 f"tts_{int(time.time()*1000)}.mp3"
+#             )
+            
+#             pygame.mixer.init()
+
+#             tts = gTTS(text=text, lang="vi")
+#             tts.save(temp_file)
+
+#             print("🎧 Đang phát âm thanh:", temp_file)
+
+#             pygame.mixer.music.load(temp_file)
+#             pygame.mixer.music.play()
+
+#             while pygame.mixer.music.get_busy():
+#                 time.sleep(0.1)
+                
+#             pygame.mixer.music.stop()
+#             pygame.mixer.quit()
+
+#             pygame.mixer.music.unload()
+#             os.remove(temp_file)
+
+#             print("✔️ Đã đọc")
+
+#         except Exception as e:
+#             print("❌ TTS Error:", e)
+
+#         finally:
+#             is_speaking = False
+
+#     threading.Thread(target=worker, daemon=True).start()
 def speak_vietnamese(text):
     global is_speaking
 
     if is_speaking:
-        print("⏳ Đang nói, bỏ qua...")
         return
 
     def worker():
         global is_speaking
-     
-        try:   
-            is_speaking = True
-            print("🎤 Tạo file TTS...")
-
+        is_speaking = True
+        try:
             temp_file = os.path.join(
                 tempfile.gettempdir(), 
                 f"tts_{int(time.time()*1000)}.mp3"
             )
-            
-            pygame.mixer.init()
 
             tts = gTTS(text=text, lang="vi")
             tts.save(temp_file)
-
-            print("🎧 Đang phát âm thanh:", temp_file)
 
             pygame.mixer.music.load(temp_file)
             pygame.mixer.music.play()
 
             while pygame.mixer.music.get_busy():
                 time.sleep(0.1)
-                
-            pygame.mixer.music.stop()
-            pygame.mixer.quit()
 
             pygame.mixer.music.unload()
             os.remove(temp_file)
-
-            print("✔️ Đã đọc")
 
         except Exception as e:
             print("❌ TTS Error:", e)
@@ -455,7 +489,7 @@ def speak():
         class_name = data.get('class_name', '')
         confidence = data.get('confidence', 0)
         
-        if class_name and confidence > 0.:
+        if class_name and confidence > 0.5:
             announce_detection(class_name)
             return jsonify({'success': True})
         
@@ -470,3 +504,4 @@ if __name__ == '__main__':
     
     print("🔊 TTS Engine: gTTS (Google Text-to-Speech)")
     app.run(debug=False, host='0.0.0.0', port=8000)
+    
