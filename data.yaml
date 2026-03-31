@@ -1,74 +1,69 @@
 path: D:/traffic-sign-detect/src/datasets
 
-train: ../train/images
-val: ../valid/images
-test: ../test/images
+train: train/images
+val: valid/images
+test: test/images
 
 nc: 60
 
 names:
-  # I. BIỂN CẤM (0–29)
-  - No entry
-  - No cars
-  - No motorcycles
-  - No bicycles
-  - No pedestrians
-  - No trucks
-  - No container vehicles
-  - No left turn
-  - No right turn
-  - No U-turn
-  - No stopping
-  - No parking
-  - No stopping and parking
-  - No overtaking
-  - No horn
-  - No buses
-  - No three-wheeled vehicles
-  - No animal-drawn vehicles
-  - Height limit
-  - Width limit
-  - Length limit
-  - Axle load limit
-  - Vehicle weight limit
-  - No non-motorized vehicles
-  - No tractors
-  - No trailers
-  - No mopeds
-  - No pedestrians and vehicles
-  - No left turn and U-turn
-  - No right turn and U-turn
-
-  # II. BIỂN NGUY HIỂM (30–44)
-  - Dangerous curve left
-  - Dangerous curve right
-  - Intersection ahead
-  - Traffic signals ahead
-  - Narrow road
-  - Slippery road
-  - Steep ascent
-  - Steep descent
-  - Two-way traffic
-  - Pedestrian crossing
-  - Children crossing
-  - Road works
-  - Animals crossing
-  - Railway crossing
-  - Falling rocks
-
-  # III. BIỂN HIỆU LỆNH & CHỈ DẪN (45–59)
-  - Go straight
-  - Turn left
-  - Turn right
-  - Go straight or left
-  - Go straight or right
-  - Roundabout
-  - Pedestrian path
-  - Bicycle path
-  - Parking
-  - Bus stop
-  - Hospital
-  - Gas station
-  - Restaurant
-  - Hotel
-  - Slow
+  - Cấm đi ngược chiều
+  - Cấm ô tô
+  - Cấm xe mô tô
+  - Cấm xe đạp
+  - Cấm người đi bộ
+  - Cấm xe tải
+  - Cấm xe container
+  - Cấm rẽ trái
+  - Cấm rẽ phải
+  - Cấm quay đầu xe
+  - Cấm dừng xe
+  - Cấm đỗ xe
+  - Cấm dừng và đỗ xe
+  - Cấm vượt
+  - Cấm bấm còi
+  - Cấm xe buýt
+  - Cấm xe ba bánh
+  - Cấm xe súc vật kéo
+  - Hạn chế chiều cao
+  - Hạn chế chiều rộng
+  - Hạn chế chiều dài
+  - Hạn chế tải trọng trục xe
+  - Hạn chế trọng lượng xe
+  - Cấm xe thô sơ
+  - Cấm máy kéo
+  - Cấm rơ moóc
+  - Cấm xe gắn máy
+  - Cấm người và phương tiện
+  - Cấm rẽ trái và quay đầu xe
+  - Cấm rẽ phải và quay đầu xe
+  - Đường cong nguy hiểm bên trái
+  - Đường cong nguy hiểm bên phải
+  - Giao nhau phía trước
+  - Đèn tín hiệu phía trước
+  - Đường hẹp
+  - Đường trơn
+  - Dốc lên nguy hiểm
+  - Dốc xuống nguy hiểm
+  - Đường hai chiều
+  - Đường người đi bộ
+  - Trẻ em qua đường
+  - Công trường thi công
+  - Động vật qua đường
+  - Giao nhau với đường sắt
+  - Đá rơi
+  - Đi thẳng
+  - Rẽ trái
+  - Rẽ phải
+  - Đi thẳng hoặc rẽ trái
+  - Đi thẳng hoặc rẽ phải
+  - Vòng xuyến
+  - Đường dành cho người đi bộ
+  - Đường dành cho xe đạp
+  - Bãi đỗ xe
+  - Điểm dừng xe buýt
+  - Bệnh viện
+  - Trạm xăng
+  - Nhà hàng
+  - Khách sạn
+  - Đi chậm
