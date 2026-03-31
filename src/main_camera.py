@@ -1,147 +1,351 @@
-"""
-Traffic Sign Detection using Laptop Camera
-Sử dụng YOLO11 để nhận diện biển báo giao thông qua webcam laptop
-"""
 
-import cv2
+# import cv2
+# import os
+# import time
+# from ultralytics import YOLO
+
+# # ================= CONFIG =================
+# MODEL_PATH = "runs/detect/train274/weights/best.pt"
+
+# # ================= LOAD MODEL =================
+# def load_model():
+#     try:
+#         if os.path.exists(MODEL_PATH):
+#             model = YOLO(MODEL_PATH)
+#             print(f"✅ Load model: {MODEL_PATH}")
+#         else:
+#             print("⚠️ Không tìm thấy model → dùng pretrained")
+#             model = YOLO("yolo11n.pt")
+
+#         print(f"📋 Classes: {list(model.names.values())}")
+#         return model
+
+#     except Exception as e:
+#         print(f"❌ Lỗi load model: {e}")
+#         return None
+
+
+# # ================= CAMERA =================
+# def run_camera():
+#     model = load_model()
+#     if model is None:
+#         return
+
+#     cap = cv2.VideoCapture(0)
+
+#     if not cap.isOpened():
+#         print("❌ Không mở được camera")
+#         return
+
+#     print("📷 Camera đang chạy... (Q để thoát)")
+
+#     prev_time = time.time()
+
+#     while True:
+#         ret, frame = cap.read()
+#         if not ret:
+#             break
+
+#         # YOLO
+#         results = model(frame, conf=0.15, imgsz=416)
+#         annotated = results[0].plot()
+
+#         # FPS thật
+#         curr_time = time.time()
+#         fps = 1 / (curr_time - prev_time)
+#         prev_time = curr_time
+
+#         cv2.putText(annotated, f"FPS: {fps:.1f}", (10, 30),
+#                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+#         cv2.imshow("🚦 Camera Detection", annotated)
+
+#         if cv2.waitKey(1) & 0xFF == ord('q'):
+#             break
+
+#     cap.release()
+#     cv2.destroyAllWindows()
+#     print("✅ Đã tắt camera")
+
+
+# # ================= VIDEO =================
+# def run_video(video_path):
+#     model = load_model()
+#     if model is None:
+#         return
+
+#     if not os.path.exists(video_path):
+#         print("❌ Không tìm thấy video")
+#         return
+
+#     cap = cv2.VideoCapture(video_path)
+
+#     fps = int(cap.get(cv2.CAP_PROP_FPS))
+#     out = cv2.VideoWriter(
+#         "output.mp4",
+#         cv2.VideoWriter_fourcc(*"mp4v"),
+#         fps,
+#         (640, 360)
+#     )
+
+#     print("🎥 Đang xử lý video...")
+
+#     frame_count = 0
+#     prev_time = time.time()
+
+#     while True:
+#         ret, frame = cap.read()
+#         if not ret:
+#             break
+
+#         frame_count += 1
+
+#         # 👉 Bỏ bớt frame để tăng tốc
+#         if frame_count % 3 != 0:
+#             continue
+
+#         # 👉 Resize nhẹ
+#         frame = cv2.resize(frame, (640, 360))
+
+#         # YOLO
+#         results = model(frame, conf=0.3, imgsz=416)
+#         annotated = results[0].plot()
+
+#         # FPS
+#         curr_time = time.time()
+#         fps_real = 1 / (curr_time - prev_time)
+#         prev_time = curr_time
+
+#         cv2.putText(annotated, f"FPS: {fps_real:.1f}", (10, 30),
+#                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+#         out.write(annotated)
+
+#         # 👉 mở nếu muốn xem realtime
+#         cv2.imshow("🎥 Video Detection", annotated)
+#         if cv2.waitKey(1) & 0xFF == ord('q'):
+#             break
+
+#     cap.release()
+#     out.release()
+#     cv2.destroyAllWindows()
+
+#     print("✅ Xuất video: output.mp4")
+
+
+# # ================= MENU =================
+# if __name__ == "__main__":
+#     print("===== 🚦 TRAFFIC SIGN DETECTION =====")
+#     print("1. Camera")
+#     print("2. Video")
+
+#     choice = input("👉 Chọn mode: ")
+
+#     if choice == "1":
+#         run_camera()
+
+#     elif choice == "2":
+#         path = input("👉 Nhập đường dẫn video: ")
+#         run_video(path)
+
+#     else:
+#         print("❌ Lựa chọn không hợp lệ")
 import os
+import time
+import cv2
 from ultralytics import YOLO
 
-# Load YOLO11 model
-MODEL_PATH = "src/models/yolo11/weights/best.pt"
+# ================= CONFIG =================
+MODEL_PATH = "runs/detect/train274/weights/best.pt"
+FALLBACK_MODEL = "yolo11n.pt"
+OUTPUT_VIDEO_PATH = "output.mp4"
 
+# Nếu muốn tăng tốc video thì đặt 1, 2, 3...
+# 1 = xử lý mọi frame
+FRAME_SKIP = 1
+
+# Kích thước xử lý
+PROCESS_WIDTH = 640
+PROCESS_HEIGHT = 360
+
+
+# ================= LOAD MODEL =================
 def load_model():
-    """Load trained YOLO11 model"""
     try:
-        # Thử load từ đường dẫn tương đối trước
         if os.path.exists(MODEL_PATH):
-            model = YOLO(MODEL_PATH)
-            print(f"✅ Đã load model từ: {MODEL_PATH}")
-        elif os.path.exists("models/yolo11/weights/best.pt"):
-            model = YOLO("models/yolo11/weights/best.pt")
-            print("✅ Đã load model từ: models/yolo11/weights/best.pt")
+            loaded_model = YOLO(MODEL_PATH)
+            print(f"✅ Load model: {MODEL_PATH}")
         else:
-            print("⚠️ Không tìm thấy model custom. Đang load model pretrained...")
-            model = YOLO("yolo11n.pt")
-            print("✅ Đã load model YOLO11n pretrained")
-        
-        print(f"📋 Classes của model: {list(model.names.values())}")
-        return model
-        
+            print("⚠️ Không tìm thấy model custom → dùng pretrained")
+            loaded_model = YOLO(FALLBACK_MODEL)
+            print(f"✅ Load fallback model: {FALLBACK_MODEL}")
+
+        print(f"📋 Classes: {list(loaded_model.names.values())}")
+        return loaded_model
+
     except Exception as e:
-        print(f"❌ Lỗi khi load model: {e}")
+        print(f"❌ Lỗi load model: {e}")
         return None
 
-def run_camera_detection():
-    """Chạy detection từ webcam laptop"""
-    
-    # Load model
-    model = load_model()
+
+model = load_model()
+
+
+# ================= HELPERS =================
+def draw_fps(frame, fps_value):
+    cv2.putText(
+        frame,
+        f"FPS: {fps_value:.1f}",
+        (10, 30),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1,
+        (0, 255, 0),
+        2
+    )
+
+
+def infer_frame(frame, conf=0.25, imgsz=416):
+    results = model(frame, conf=conf, imgsz=imgsz, verbose=False)
+    annotated = results[0].plot()
+    return annotated, results
+
+
+# ================= CAMERA =================
+def run_camera():
     if model is None:
-        print("❌ Không thể khởi động vì model chưa được load!")
+        print("❌ Không thể chạy vì model chưa load được")
         return
-    
-    # Mở camera
-    print("📷 Đang mở camera...")
-    cap = cv2.VideoCapture(0)  # 0 = camera mặc định của laptop
-    
+
+    cap = cv2.VideoCapture(0)
+
     if not cap.isOpened():
-        print("❌ Không thể mở camera! Vui lòng kiểm tra:")
-        print("   - Camera có đang được sử dụng bởi ứng dụng khác không?")
-        print("   - Driver camera đã được cài đặt chưa?")
+        print("❌ Không mở được camera")
         return
-    
-    # Cấu hình camera
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-    cap.set(cv2.CAP_PROP_FPS, 30)
-    
-    print("✅ Camera đã sẵn sàng!")
-    print("=" * 50)
-    print("📌 HƯỚNG DẪN SỬ DỤNG:")
-    print("   - Nhấn 'Q' để thoát")
-    print("   - Nhấn 'S' để chụp và lưu ảnh hiện tại")
-    print("   - Nhấn 'P' để tạm dừng/tiếp tục")
-    print("=" * 50)
-    
-    paused = False
-    frame_count = 0
-    screenshot_count = 0
-    
-    # Tạo thư mục lưu ảnh nếu chưa có
-    os.makedirs("captured_images", exist_ok=True)
-    
+
+    print("📷 Camera đang chạy... (Q để thoát)")
+
+    prev_time = time.time()
+
     try:
         while True:
-            if not paused:
-                ret, frame = cap.read()
-                if not ret:
-                    print("⚠️ Không thể đọc frame từ camera!")
-                    break
-                
-                frame_count += 1
-                
-                # Chạy detection
-                results = model(frame, conf=0.5, verbose=False)
-                
-                # Vẽ kết quả lên frame
-                annotated_frame = results[0].plot()
-                
-                # Hiển thị thông tin detection
-                detections = results[0].boxes
-                if detections is not None and len(detections) > 0:
-                    for box in detections:
-                        class_name = model.names[int(box.cls)]
-                        confidence = float(box.conf)
-                        print(f"🚦 Phát hiện: {class_name} - Độ tin cậy: {confidence:.2%}")
-                
-                # Thêm thông tin lên màn hình
-                cv2.putText(annotated_frame, f"FPS: {cap.get(cv2.CAP_PROP_FPS):.1f}", 
-                           (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                cv2.putText(annotated_frame, f"Phat hien: {len(detections) if detections is not None else 0}", 
-                           (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                cv2.putText(annotated_frame, "Nhan Q de thoat | S: Chup | P: Tam dung", 
-                           (10, annotated_frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
-            else:
-                # Khi tạm dừng, hiển thị thông báo
-                cv2.putText(annotated_frame, "TAM DUNG - Nhan P de tiep tuc", 
-                           (annotated_frame.shape[1]//2 - 200, annotated_frame.shape[0]//2), 
-                           cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            
-            # Hiển thị frame
-            cv2.imshow("Traffic Sign Detection - Camera", annotated_frame)
-            
-            # Xử lý phím bấm
-            key = cv2.waitKey(1) & 0xFF
-            
-            if key == ord('q') or key == ord('Q'):
-                print("👋 Đang thoát...")
+            ret, frame = cap.read()
+            if not ret:
+                print("⚠️ Không đọc được frame từ camera")
                 break
-            elif key == ord('s') or key == ord('S'):
-                # Lưu ảnh
-                screenshot_count += 1
-                filename = f"captured_images/screenshot_{screenshot_count}.jpg"
-                cv2.imwrite(filename, annotated_frame)
-                print(f"📸 Đã lưu ảnh: {filename}")
-            elif key == ord('p') or key == ord('P'):
-                paused = not paused
-                if paused:
-                    print("⏸️ Đã tạm dừng")
-                else:
-                    print("▶️ Tiếp tục...")
-                    
-    except KeyboardInterrupt:
-        print("\n👋 Đã ngắt bởi người dùng!")
-        
+
+            annotated, _ = infer_frame(frame, conf=0.15, imgsz=416)
+
+            curr_time = time.time()
+            delta = max(curr_time - prev_time, 1e-6)
+            fps_real = 1.0 / delta
+            prev_time = curr_time
+
+            draw_fps(annotated, fps_real)
+
+            cv2.imshow("Traffic Sign Detection - Camera", annotated)
+
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord("q"):
+                break
+
     finally:
-        # Giải phóng camera và đóng cửa sổ
         cap.release()
         cv2.destroyAllWindows()
-        print("✅ Đã đóng camera và giải phóng tài nguyên")
-        print(f"📊 Tổng số frame đã xử lý: {frame_count}")
+        print("✅ Đã tắt camera")
 
+
+# ================= VIDEO =================
+def run_video(video_path):
+    if model is None:
+        print("❌ Không thể chạy vì model chưa load được")
+        return
+
+    if not os.path.exists(video_path):
+        print(f"❌ Không tìm thấy video: {video_path}")
+        return
+
+    cap = cv2.VideoCapture(video_path)
+
+    if not cap.isOpened():
+        print(f"❌ Không mở được video: {video_path}")
+        return
+
+    input_fps = cap.get(cv2.CAP_PROP_FPS)
+    if input_fps <= 0:
+        input_fps = 25.0
+
+    # Nếu skip frame thì giảm fps output để giữ gần đúng thời lượng video
+    output_fps = input_fps / FRAME_SKIP if FRAME_SKIP > 0 else input_fps
+    output_fps = max(output_fps, 1.0)
+
+    out = cv2.VideoWriter(
+        OUTPUT_VIDEO_PATH,
+        cv2.VideoWriter_fourcc(*"mp4v"),
+        output_fps,
+        (PROCESS_WIDTH, PROCESS_HEIGHT)
+    )
+
+    if not out.isOpened():
+        cap.release()
+        print("❌ Không tạo được file output.mp4")
+        return
+
+    print("🎥 Đang xử lý video...")
+
+    frame_count = 0
+    processed_count = 0
+    prev_time = time.time()
+
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            frame_count += 1
+
+            if FRAME_SKIP > 1 and frame_count % FRAME_SKIP != 0:
+                continue
+
+            frame = cv2.resize(frame, (PROCESS_WIDTH, PROCESS_HEIGHT))
+
+            annotated, _ = infer_frame(frame, conf=0.30, imgsz=416)
+
+            curr_time = time.time()
+            delta = max(curr_time - prev_time, 1e-6)
+            fps_real = 1.0 / delta
+            prev_time = curr_time
+
+            draw_fps(annotated, fps_real)
+
+            out.write(annotated)
+            processed_count += 1
+
+            cv2.imshow("Traffic Sign Detection - Video", annotated)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+
+    finally:
+        cap.release()
+        out.release()
+        cv2.destroyAllWindows()
+
+    print(f"✅ Đã xử lý {processed_count} frame")
+    print(f"✅ Xuất video: {OUTPUT_VIDEO_PATH}")
+
+
+# ================= MENU =================
 if __name__ == "__main__":
-    print("=" * 50)
-    print("🚦 TRAFFIC SIGN DETECTION - CAMERA MODE")
-    print("=" * 50)
-    run_camera_detection()
+    print("===== TRAFFIC SIGN DETECTION =====")
+    print("1. Camera")
+    print("2. Video")
+
+    choice = input("👉 Chọn mode: ").strip()
+
+    if choice == "1":
+        run_camera()
+    elif choice == "2":
+        path = input("👉 Nhập đường dẫn video: ").strip()
+        run_video(path)
+    else:
+        print("❌ Lựa chọn không hợp lệ")
