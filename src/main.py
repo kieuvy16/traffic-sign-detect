@@ -39,8 +39,6 @@ SIGN_NAMES_VIETNAMESE = {
     "No pedestrians": "Cấm người đi bộ",
     "No trucks": "Cấm xe tải",
     "No container vehicles": "Cấm xe container",
-    "No left turn": "Cấm rẽ trái",
-    "No right turn": "Cấm rẽ phải",
     "No U-turn": "Cấm quay đầu xe",
     "No stopping": "Cấm dừng xe",
     "No parking": "Cấm đỗ xe",
@@ -59,9 +57,10 @@ SIGN_NAMES_VIETNAMESE = {
     "No tractors": "Cấm máy kéo",
     "No trailers": "Cấm rơ moóc",
     "No mopeds": "Cấm xe gắn máy",
-    "No pedestrians and vehicles": "Cấm người và phương tiện",
-    "No left turn and U-turn": "Cấm rẽ trái và quay đầu xe",
-    "No right turn and U-turn": "Cấm rẽ phải và quay đầu xe",
+    "No turn right": "Cấm rẽ phải",
+    "No turn left": "Cấm rẽ trái",
+    "No turn right and No U-turn": "Cấm rẽ phải và quay đầu xe",
+    "No turn left and No U-turn": "Cấm rẽ trái và quay đầu xe",
 
     # II. BIỂN NGUY HIỂM (30–44)
     "Dangerous curve left": "Đường cong nguy hiểm bên trái",
@@ -203,21 +202,33 @@ def speak_vietnamese(text):
     threading.Thread(target=worker, daemon=True).start()
 
 
-def announce_detection(class_name):
+# def announce_detection(class_name):
+#     now = time.time()
+#     last_announced = announced_signs.get(class_name, 0)
+
+#     if now - last_announced < ANNOUNCE_COOLDOWN:
+#         print("⏸ Bỏ vì cooldown")
+#         return
+
+#     vn_name = SIGN_NAMES_VIETNAMESE.get(class_name, class_name)
+#     text = f"Phía trước có biển báo: {vn_name}"
+#     print("🔊 Sắp đọc:", text)
+
+#     speak_vietnamese(text)
+#     announced_signs[class_name] = now
+def announce_detection(sign_text):
     now = time.time()
-    last_announced = announced_signs.get(class_name, 0)
+    last_announced = announced_signs.get(sign_text, 0)
 
     if now - last_announced < ANNOUNCE_COOLDOWN:
         print("⏸ Bỏ vì cooldown")
         return
 
-    vn_name = SIGN_NAMES_VIETNAMESE.get(class_name, class_name)
-    text = f"Phía trước có biển báo: {vn_name}"
+    text = f"Phía trước có biển báo: {sign_text}"
     print("🔊 Sắp đọc:", text)
 
     speak_vietnamese(text)
-    announced_signs[class_name] = now
-
+    announced_signs[sign_text] = now
 
 def process_image(image):
     try:
@@ -268,7 +279,7 @@ def process_image(image):
                     class_id = int(box.cls[0])
                     class_name = model.names[class_id]
                     vn_name = SIGN_NAMES_VIETNAMESE.get(class_name, class_name)
-                    # confidence = float(box.conf[0])
+                    confidence = float(box.conf[0])
 
                     detection = {
                         "class_name": vn_name,
@@ -279,7 +290,7 @@ def process_image(image):
                     detections.append(detection)
 
                     if confidence > 0.5:
-                        announce_detection(class_name)
+                        announce_detection(vn_name)
                         detection_history.append(vn_name)
 
                     print(f"✅ Biển báo {i + 1}: {vn_name} ({confidence:.2f})")
@@ -366,9 +377,34 @@ def get_history():
     })
 
 
+# @app.route("/speak", methods=["POST"])
+# def speak():
+#     """Speak sign name manually from client"""
+#     try:
+#         data = request.get_json(silent=True) or {}
+
+#         class_name = str(data.get("class_name", "")).strip()
+#         confidence = float(data.get("confidence", 0) or 0)
+
+#         if not class_name:
+#             return jsonify({"success": False, "reason": "No class name provided"}), 400
+
+#         if confidence <= 0.5:
+#             return jsonify({
+#                 "success": False,
+#                 "reason": "Low confidence"
+#             })
+
+#         announce_detection(class_name)
+
+#         # Không append history ở đây để tránh bị nhân đôi
+#         # vì /detect đã append rồi
+#         return jsonify({"success": True})
+
+#     except Exception as e:
+#         return jsonify({"success": False, "error": str(e)}), 500
 @app.route("/speak", methods=["POST"])
 def speak():
-    """Speak sign name manually from client"""
     try:
         data = request.get_json(silent=True) or {}
 
@@ -379,15 +415,9 @@ def speak():
             return jsonify({"success": False, "reason": "No class name provided"}), 400
 
         if confidence <= 0.5:
-            return jsonify({
-                "success": False,
-                "reason": "Low confidence"
-            })
+            return jsonify({"success": False, "reason": "Low confidence"})
 
         announce_detection(class_name)
-
-        # Không append history ở đây để tránh bị nhân đôi
-        # vì /detect đã append rồi
         return jsonify({"success": True})
 
     except Exception as e:
