@@ -788,6 +788,8 @@
           </div>
         </div>
       </div>
+      <button onclick="loadHistory()">Xem lịch sử</button>
+      <div id="history"></div>
     </div>
 
     <script>
@@ -899,101 +901,37 @@
         error.style.display = "none";
         success.style.display = "none";
       }
-      const LABELS = [
-        "Cấm dừng",
-        "Cấm đỗ",
-        "Cấm quay đầu",
-        "Cấm rẽ trái",
-        "Cấm rẽ phải",
-        "Cấm ô tô",
-        "Cấm xe tải",
-        "Cấm xe máy",
-        "Cấm xe đạp",
-        "Cấm đi ngược chiều",
-        "Cấm vượt",
-        "Giảm tốc độ",
-        "Đường cấm",
-        "Cấm dừng và đỗ xe",
-        "Cấm còi",
-        "Hết hạn chế tốc độ",
-        "Nguy hiểm khúc cua trái",
-        "Nguy hiểm khúc cua phải",
-        "Đường cong liên tiếp",
-        "Đường hẹp",
-        "Đường trơn trượt",
-        "Đường giao nhau",
-        "Giao nhau có tín hiệu",
-        "Giao nhau có đường sắt",
-        "Trẻ em qua đường",
-        "Người đi bộ",
-        "Công trường",
-        "Có động vật cắt ngang",
-        "Đường xấu",
-        "Có gió ngang",
-        "Cảnh báo khác",
-        "Hiệu lệnh rẽ trái",
-        "Hiệu lệnh rẽ phải",
-        "Đi thẳng",
-        "Đi thẳng hoặc rẽ trái",
-        "Đi thẳng hoặc rẽ phải",
-        "Đi vòng chướng ngại",
-        "Đường dành cho người đi bộ",
-        "Đường dành cho xe đạp",
-        "Đường dành cho xe máy",
-        "Đường dành cho ô tô",
-        "Chỉ dẫn bệnh viện",
-        "Chỉ dẫn bến xe",
-        "Chỉ dẫn trạm xăng",
-        "Chỉ dẫn nơi đỗ xe",
-        "Chỉ dẫn đường một chiều",
-        "Chỉ dẫn đường cấm",
-        "Đường ưu tiên",
-        "Hết đường ưu tiên",
-        "Hết mọi lệnh cấm",
-        "Hết mọi hạn chế",
-        "Cấm dừng từ 6h đến 18h",
-        "Cấm đỗ từ 6h đến 18h",
-        "Khu vực trường học",
-        "Khu dân cư",
-        "Hết khu dân cư",
-        "Biển STOP",
-        "Nhường đường",
-        "Camera phạt nguội",
-        "Zone cấm dừng đỗ",
-        "Hết zone cấm dừng đỗ",
-      ];
+      
+function showResults(data) {
+  resultImage.src = "data:image/png;base64," + data.image;
+  detectionList.innerHTML = "";
 
-      function showResults(data) {
-        resultImage.src = "data:image/png;base64," + data.image;
+  data.detections.forEach((detection) => {
+    const confidence = (detection.confidence * 100).toFixed(1);
+    const li = document.createElement("li");
+    li.className = "detection-item";
+    li.innerHTML = `
+      <div class="detection-class">
+        ${detection.class_name || "Không xác định"}
+      </div>
+      <div class="detection-confidence">
+        <span>${confidence}%</span>
+        <div class="confidence-bar">
+          <div class="confidence-fill" style="width: ${confidence}%"></div>
+        </div>
+      </div>
+    `;
+    detectionList.appendChild(li);
+  });
 
-        detectionList.innerHTML = "";
-        data.detections.forEach((detection) => {
-          const confidence = (detection.confidence * 100).toFixed(1);
-          const li = document.createElement("li");
-          li.className = "detection-item";
-          li.innerHTML = `
-            <div class="detection-class">
-              ${LABELS[detection.class] || "Không xác định"}
-            </div>
+  if (data.count > 0) {
+    showSuccess(`Phát hiện ${data.count} biển báo giao thông`);
+  } else {
+    showSuccess("Không phát hiện biển báo nào trong ảnh này");
+  }
 
-            <div class="detection-confidence">
-              <span>${confidence}%</span>
-              <div class="confidence-bar">
-                <div class="confidence-fill" style="width: ${confidence}%"></div>
-              </div>
-            </div>
-          `;
-          detectionList.appendChild(li);
-        });
-
-        if (data.count > 0) {
-          showSuccess(`Phát hiện ${data.count} biển báo giao thông`);
-        } else {
-          showSuccess("Không phát hiện biển báo nào trong ảnh này");
-        }
-
-        results.style.display = "grid";
-      }
+  results.style.display = "grid";
+}
 
       // ==================== WEBCAM ====================
       const startBtn = document.getElementById("startWebcam");
@@ -1072,86 +1010,90 @@
         ctx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
         liveDetections.style.display = "none";
       }
+     
+async function processFrame() {
+  if (!isStreaming) return;
 
-      async function processFrame() {
-        if (!isStreaming) return;
+  frameCount++;
+  totalFrameCount++;
+  totalFrames.textContent = totalFrameCount;
 
-        frameCount++;
-        totalFrameCount++;
-        totalFrames.textContent = totalFrameCount;
+  const now = performance.now();
+  if (now - lastTime >= 1000) {
+    fpsValue.textContent = frameCount;
+    frameCount = 0;
+    lastTime = now;
+  }
 
-        const now = performance.now();
-        if (now - lastTime >= 1000) {
-          fpsValue.textContent = frameCount;
-          frameCount = 0;
-          lastTime = now;
-        }
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = 640;
+  tempCanvas.height = 480;
+  const tempCtx = tempCanvas.getContext("2d");
 
-        const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = 640;
-        tempCanvas.height = 480;
-        const tempCtx = tempCanvas.getContext("2d");
+  tempCtx.translate(640, 0);
+  tempCtx.scale(-1, 1);
+  tempCtx.drawImage(webcamVideo, 0, 0, 640, 480);
 
-        // Flip horizontally to match the mirrored camera view
-        tempCtx.translate(640, 0);
-        tempCtx.scale(-1, 1);
-        tempCtx.drawImage(webcamVideo, 0, 0, 640, 480);
+  try {
+    const blob = await new Promise((resolve) =>
+      tempCanvas.toBlob(resolve, "image/jpeg", 0.8)
+    );
 
-        try {
-          const blob = await new Promise((resolve) =>
-            tempCanvas.toBlob(resolve, "image/jpeg", 0.8)
-          );
-          const formData = new FormData();
-          formData.append("file", blob, "frame.jpg");
+    const formData = new FormData();
+    formData.append("file", blob, "frame.jpg");
 
-          const response = await fetch("/detect", {
-            method: "POST",
-            body: formData,
-          });
+    const response = await fetch("/detect", {
+      method: "POST",
+      body: formData,
+    });
 
-          const data = await response.json();
+    const data = await response.json();
 
-          if (data.success) {
-            const img = new Image();
-            img.onload = () => {
-              ctx.drawImage(img, 0, 0, 640, 480);
-            };
-            img.src = "data:image/png;base64," + data.image;
+    if (data.success) {
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+        ctx.drawImage(img, 0, 0, 640, 480);
+      };
+      img.src = "data:image/png;base64," + data.image;
 
-            detectCount.textContent = data.count;
+      detectCount.textContent = data.count || 0;
 
-            if (data.detections && data.detections.length > 0) {
-              liveDetections.style.display = "block";
-              liveDetectionList.innerHTML = data.detections
-                .map(
-                  (d) => `
-                  <div class="live-detection-item">
-                    <span class="class-name">
-                      ${LABELS[d.class] || d.name || "Không xác định"}
-                    </span>
-                    <span class="confidence">
-                      ${(d.confidence * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                  `
-                )
-                .join("");
+      if (data.detections && data.detections.length > 0) {
+        liveDetections.style.display = "block";
 
-              // Announce detected signs in Vietnamese
-              data.detections.forEach((d) => {
-                announceDetection(LABELS[d.class], d.confidence);
+        liveDetectionList.innerHTML = data.detections
+          .map(
+            (d) => `
+              <div class="live-detection-item">
+                <span class="class-name">
+                  ${d.class_name || "Không xác định"}
+                </span>
+                <span class="confidence">
+                  ${(d.confidence * 100).toFixed(1)}%
+                </span>
+              </div>
+            `
+          )
+          .join("");
 
-              });
-            } else {
-              liveDetections.style.display = "none";
-            }
-          }
-        } catch (err) {
-          console.error("Detection error:", err);
-        }
-
-        animationId = requestAnimationFrame(processFrame);
+        data.detections.forEach((d) => {
+          announceDetection(d.class_name, d.confidence);
+        });
+      } else {
+        liveDetections.style.display = "none";
+        liveDetectionList.innerHTML = "";
       }
+    } else {
+      console.error("Detect failed:", data.error);
+    }
+  } catch (err) {
+    console.error("Detection error:", err);
+  }
+
+  animationId = requestAnimationFrame(processFrame);
+}
+
 
       function captureFrame() {
         const tempCanvas = document.createElement("canvas");
@@ -1165,6 +1107,27 @@
         link.href = tempCanvas.toDataURL("image/png");
         link.click();
       }
+      function loadHistory() {
+  fetch("/history")
+    .then((res) => res.json())
+    .then((data) => {
+      let html = `<h3>Tổng: ${data.total}</h3>`;
+
+      if (data.data && data.data.length > 0) {
+        data.data.forEach((item) => {
+          html += `<p>${item.name}: ${item.count}</p>`;
+        });
+      } else {
+        html += `<p>Chưa có lịch sử nhận diện</p>`;
+      }
+
+      document.getElementById("history").innerHTML = html;
+    })
+    .catch((err) => {
+      document.getElementById("history").innerHTML =
+        `<p>Lỗi tải lịch sử: ${err.message}</p>`;
+    });
+}
     </script>
   </body>
 </html>
